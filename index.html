@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Chat Motoristas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --c1:#0f1923;      /* navy escuro */
+  --c2:#1a2d3d;      /* navy médio */
+  --c3:#243b50;      /* navy claro */
+  --accent:#00c896;  /* verde */
+  --accent2:#00a87f;
+  --red:#ff4d6d;
+  --bg:#f0f2f5;
+  --white:#ffffff;
+  --gray1:#f7f8fa;
+  --gray2:#eceef2;
+  --gray3:#d1d5db;
+  --gray4:#9ca3af;
+  --gray5:#6b7280;
+  --text:#0f1923;
+  --bubble-me:#d9fdd3;
+  --bubble-other:#ffffff;
+  --bubble-support-me:#1a2d3d;
+  --font:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+  --r8:8px;--r12:12px;--r16:16px;--r20:20px;--r50:50%;
+  --shadow:0 2px 8px rgba(0,0,0,.08);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;justify-content:center;align-items:stretch;}
+button{font-family:var(--font);cursor:pointer;border:none;outline:none;}
+input,textarea{font-family:var(--font);outline:none;}
+a{color:var(--accent);text-decoration:none;}
+
+/* ═══════════════════════════════════════
+   APP WRAPPER
+═══════════════════════════════════════ */
+#app{width:100%;max-width:460px;height:100%;display:flex;flex-direction:column;background:var(--white);position:relative;overflow:hidden;box-shadow:var(--shadow-lg);}
+@media(min-width:900px){#app{max-width:100%;flex-direction:row;}}
+
+/* ═══════════════════════════════════════
+   LOADING / SPLASH
+═══════════════════════════════════════ */
+#splash{position:absolute;inset:0;background:var(--c1);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity .4s;}
+#splash.hide{opacity:0;pointer-events:none;}
+.splash-logo{width:72px;height:72px;border-radius:var(--r20);background:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 0 40px rgba(0,200,150,.3);}
+.splash-logo svg{width:36px;height:36px;fill:var(--c1);}
+.splash-title{font-size:22px;font-weight:700;color:var(--white);letter-spacing:-.3px;}
+.splash-sub{font-size:13px;color:rgba(255,255,255,.45);margin-top:6px;}
+.splash-loader{margin-top:40px;display:flex;gap:6px;}
+.splash-loader span{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.2s ease-in-out infinite;}
+.splash-loader span:nth-child(2){animation-delay:.2s;}
+.splash-loader span:nth-child(3){animation-delay:.4s;}
+@keyframes pulse{0%,80%,100%{transform:scale(.6);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+
+/* ═══════════════════════════════════════
+   TELA: SELEÇÃO DE PERFIL
+═══════════════════════════════════════ */
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;animation:fadeIn .25s ease;}
+.screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+#screen-role{align-items:center;justify-content:center;padding:32px 24px;background:var(--c1);}
+.role-logo{width:64px;height:64px;border-radius:18px;background:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:24px;}
+.role-logo svg{width:30px;height:30px;fill:var(--c1);}
+.role-title{font-size:24px;font-weight:700;color:var(--white);margin-bottom:8px;letter-spacing:-.5px;}
+.role-sub{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:40px;text-align:center;line-height:1.6;}
+.role-cards{display:flex;flex-direction:column;gap:12px;width:100%;}
+.role-card{background:var(--c2);border:1.5px solid var(--c3);border-radius:var(--r16);padding:18px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;}
+.role-card:hover{border-color:var(--accent);background:var(--c3);}
+.role-card-icon{width:44px;height:44px;border-radius:var(--r12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.role-card-icon svg{width:22px;height:22px;}
+.role-card-text p{font-size:15px;font-weight:600;color:var(--white);}
+.role-card-text span{font-size:12px;color:rgba(255,255,255,.45);}
+.role-card-arrow{margin-left:auto;color:rgba(255,255,255,.25);font-size:18px;}
+
+/* ═══════════════════════════════════════
+   TELA: LOGIN
+═══════════════════════════════════════ */
+#screen-login{background:var(--c1);padding:0;}
+.login-header{background:var(--c1);padding:48px 24px 28px;display:flex;flex-direction:column;}
+.back-btn{background:none;border:none;color:rgba(255,255,255,.5);font-size:13px;font-family:var(--font);cursor:pointer;padding:0;margin-bottom:20px;display:flex;align-items:center;gap:6px;width:fit-content;}
+.back-btn:hover{color:var(--white);}
+.login-header h2{font-size:22px;font-weight:700;color:var(--white);letter-spacing:-.3px;}
+.login-header p{font-size:13px;color:rgba(255,255,255,.45);margin-top:6px;line-height:1.5;}
+.login-body{flex:1;background:var(--bg);border-radius:24px 24px 0 0;padding:28px 24px;display:flex;flex-direction:column;gap:0;overflow-y:auto;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--gray5);margin-bottom:7px;text-transform:uppercase;letter-spacing:.7px;}
+.field input{width:100%;padding:14px 16px;border:1.5px solid var(--gray2);border-radius:var(--r12);font-size:15px;color:var(--text);background:var(--white);transition:border .2s,box-shadow .2s;}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,200,150,.12);}
+.btn-main{width:100%;padding:15px;background:var(--accent);color:var(--c1);border:none;border-radius:var(--r12);font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;letter-spacing:-.2px;}
+.btn-main:hover{background:var(--accent2);}
+.btn-main:disabled{background:var(--gray3);color:var(--gray5);cursor:not-allowed;}
+.login-err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:18px;font-weight:500;}
+
+/* ═══════════════════════════════════════
+   TELA: CHAT MOTORISTA
+═══════════════════════════════════════ */
+#screen-driver-chat{flex-direction:column;}
+.driver-topbar{background:var(--c1);padding:14px 16px 12px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.driver-topbar .av{width:38px;height:38px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--c1);flex-shrink:0;}
+.driver-topbar .dinfo p{font-size:14px;font-weight:600;color:var(--white);}
+.driver-topbar .dinfo span{font-size:11px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:4px;}
+.online-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;}
+.chatbg{flex:1;overflow-y:auto;padding:12px 14px;background:#e8ded4 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='1' fill='rgba(0,0,0,.04)'/%3E%3C/svg%3E");display:flex;flex-direction:column;gap:3px;}
+.chatbg::-webkit-scrollbar{width:3px;}
+.chatbg::-webkit-scrollbar-thumb{background:rgba(0,0,0,.1);border-radius:2px;}
+.day-sep{text-align:center;margin:10px 0;}
+.day-sep span{background:rgba(255,255,255,.85);color:#666;font-size:11px;padding:3px 12px;border-radius:10px;font-weight:500;}
+.msg-wrap{display:flex;flex-direction:column;}
+.msg-wrap.me{align-items:flex-end;}
+.msg-wrap.them{align-items:flex-start;}
+.msg-bubble{max-width:78%;padding:8px 12px 18px;border-radius:10px;position:relative;font-size:14.5px;line-height:1.5;word-break:break-word;box-shadow:0 1px 2px rgba(0,0,0,.1);}
+.msg-wrap.me .msg-bubble{background:var(--bubble-me);border-top-right-radius:2px;color:#1a2d3d;}
+.msg-wrap.them .msg-bubble{background:var(--bubble-other);border-top-left-radius:2px;color:var(--text);}
+.msg-bubble .mtime{position:absolute;bottom:4px;right:10px;font-size:10px;color:rgba(0,0,0,.4);white-space:nowrap;}
+.msg-wrap.me .msg-bubble .mtime{color:#5a9e7a;}
+.msg-wrap.them .msg-name{font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:2px;padding-left:2px;}
+.typing-indicator{padding:8px 14px;font-size:12px;color:var(--gray4);display:none;}
+
+.input-bar{background:#f0f0f0;padding:8px 10px;display:flex;align-items:flex-end;gap:8px;flex-shrink:0;}
+.input-bar textarea{flex:1;padding:11px 15px;border-radius:22px;border:none;background:var(--white);font-size:15px;font-family:var(--font);resize:none;max-height:100px;min-height:44px;line-height:1.4;color:var(--text);}
+.input-bar textarea::placeholder{color:var(--gray4);}
+.send-btn{width:44px;height:44px;border-radius:50%;background:var(--c1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.send-btn:hover{background:var(--c2);}
+.send-btn.active{background:var(--accent);}
+.send-btn svg{width:18px;height:18px;fill:var(--white);}
+.send-btn.active svg{fill:var(--c1);}
+
+/* ═══════════════════════════════════════
+   TELA: PAINEL SUPORTE (DESKTOP)
+═══════════════════════════════════════ */
+#screen-support{flex-direction:row;flex:1;}
+.sup-sidebar{width:300px;background:var(--c1);display:flex;flex-direction:column;flex-shrink:0;border-right:1px solid var(--c3);}
+@media(max-width:899px){
+  #screen-support{flex-direction:column;}
+  .sup-sidebar{width:100%;flex:1;border-right:none;border-bottom:1px solid var(--c3);}
+  .sup-sidebar.hidden-mobile{display:none;}
+  .sup-chat.hidden-mobile{display:none;}
+}
+.sup-topbar{padding:18px 16px 12px;display:flex;align-items:center;justify-content:space-between;}
+.sup-topbar h2{font-size:16px;font-weight:700;color:var(--white);}
+.sup-topbar span{font-size:11px;color:rgba(255,255,255,.4);}
+.btn-new{background:var(--accent);color:var(--c1);border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-new:hover{background:var(--accent2);}
+.sup-search{padding:0 12px 12px;}
+.sup-search input{width:100%;padding:9px 14px;border-radius:20px;border:none;background:var(--c2);font-size:13px;color:var(--white);font-family:var(--font);}
+.sup-search input::placeholder{color:rgba(255,255,255,.3);}
+.sup-list{flex:1;overflow-y:auto;}
+.sup-list::-webkit-scrollbar{width:3px;}
+.sup-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);}
+.sup-conv{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;}
+.sup-conv:hover{background:var(--c2);}
+.sup-conv.active{background:var(--c3);}
+.sup-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+.sup-conv-info{flex:1;min-width:0;}
+.sup-conv-name{font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sup-conv-preview{font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.sup-conv-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.sup-conv-time{font-size:10px;color:rgba(255,255,255,.25);}
+.unread-badge{background:var(--accent);color:var(--c1);border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.online-pill{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);}
+.online-pill.on{background:var(--accent);}
+
+/* chat panel do suporte */
+.sup-chat{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#e8ded4;}
+.sup-chat-header{background:var(--c1);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.sup-chat-header .av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.sup-chat-header .dinfo p{font-size:14px;font-weight:600;color:var(--white);}
+.sup-chat-header .dinfo span{font-size:11px;color:rgba(255,255,255,.4);}
+.sup-no-chat{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:rgba(255,255,255,.2);background:var(--c2);}
+.sup-no-chat svg{width:48px;height:48px;opacity:.3;}
+.sup-no-chat p{font-size:14px;}
+.sup-messages{flex:1;overflow-y:auto;padding:12px 10%;display:flex;flex-direction:column;gap:3px;}
+.sup-messages::-webkit-scrollbar{width:3px;}
+.sup-messages::-webkit-scrollbar-thumb{background:rgba(0,0,0,.1);}
+.sup-msg-wrap.me .msg-bubble{background:var(--bubble-support-me);color:rgba(255,255,255,.9);border-top-right-radius:2px;}
+.sup-msg-wrap.me .msg-bubble .mtime{color:rgba(255,255,255,.35);}
+.sup-msg-wrap.them .msg-bubble{background:var(--bubble-other);border-top-left-radius:2px;}
+.sup-input-bar{background:#f0f0f0;padding:8px 10px;display:flex;align-items:flex-end;gap:8px;flex-shrink:0;}
+.sup-input-bar textarea{flex:1;padding:10px 14px;border-radius:20px;border:none;background:var(--white);font-size:14px;font-family:var(--font);resize:none;max-height:90px;min-height:40px;line-height:1.4;}
+
+/* ═══════════════════════════════════════
+   MODAL
+═══════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:none;align-items:flex-end;justify-content:center;}
+@media(min-width:500px){.modal-overlay{align-items:center;}}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:420px;animation:slideUp .25s ease;}
+@media(min-width:500px){.modal{border-radius:20px;}}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:none;}}
+.modal h3{font-size:17px;font-weight:700;color:var(--text);margin-bottom:18px;}
+.modal .field input{padding:12px 14px;border-radius:10px;font-size:14px;}
+.modal-btns{display:flex;gap:8px;margin-top:4px;}
+.modal-btns button{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:all .15s;}
+.btn-cancel{background:var(--gray2);color:var(--gray5);}
+.btn-cancel:hover{background:var(--gray3);}
+.btn-save{background:var(--c1);color:var(--white);}
+.btn-save:hover{background:var(--c2);}
+.link-result{background:#e8fef5;border:1.5px solid #a7f3d0;border-radius:12px;padding:14px;margin-top:14px;display:none;}
+.link-result p{font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;}
+.link-url{font-size:11px;color:#0369a1;word-break:break-all;font-family:var(--mono);background:var(--white);padding:8px 10px;border-radius:8px;line-height:1.5;}
+.btn-copy{margin-top:10px;width:100%;padding:9px;background:var(--c1);color:var(--white);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);}
+
+/* ═══════════════════════════════════════
+   FIREBASE CONFIG SCREEN
+═══════════════════════════════════════ */
+#screen-config{background:var(--c1);padding:32px 24px;gap:0;overflow-y:auto;}
+.cfg-logo{width:56px;height:56px;border-radius:16px;background:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+.cfg-logo svg{width:26px;height:26px;fill:var(--c1);}
+#screen-config h2{font-size:20px;font-weight:700;color:var(--white);margin-bottom:8px;}
+#screen-config .sub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:24px;line-height:1.6;}
+.cfg-steps{background:var(--c2);border-radius:var(--r12);padding:16px 18px;margin-bottom:20px;border:1px solid var(--c3);}
+.cfg-steps ol{padding-left:18px;display:flex;flex-direction:column;gap:9px;}
+.cfg-steps li{font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;}
+.cfg-steps a{color:var(--accent);}
+.cfg-steps code{background:var(--c3);padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--accent);}
+#cfg-input{width:100%;padding:12px 14px;border:1.5px solid var(--c3);border-radius:var(--r12);font-size:12px;font-family:var(--mono);height:130px;resize:none;background:var(--c2);color:rgba(255,255,255,.8);margin-bottom:4px;}
+#cfg-input:focus{border-color:var(--accent);}
+#cfg-input::placeholder{color:rgba(255,255,255,.2);}
+.cfg-err{color:var(--red);font-size:12px;margin-bottom:12px;min-height:16px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH -->
+  <div id="splash">
+    <div class="splash-logo">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+    </div>
+    <div class="splash-title">Chat Motoristas</div>
+    <div class="splash-sub">Sistema de comunicação em tempo real</div>
+    <div class="splash-loader"><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- SELEÇÃO DE PERFIL -->
+  <div class="screen" id="screen-role">
+    <div class="role-logo">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+    </div>
+    <div class="role-title">Chat Motoristas</div>
+    <div class="role-sub">Como você quer acessar o sistema?</div>
+    <div class="role-cards">
+      <div class="role-card" onclick="goLogin('driver')">
+        <div class="role-card-icon" style="background:rgba(0,200,150,.15);">
+          <svg viewBox="0 0 24 24" style="fill:#00c896;"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+        </div>
+        <div class="role-card-text">
+          <p>Sou Motorista</p>
+          <span>Acesso pelo link recebido</span>
+        </div>
+        <div class="role-card-arrow">›</div>
+      </div>
+      <div class="role-card" onclick="goLogin('support')">
+        <div class="role-card-icon" style="background:rgba(255,255,255,.08);">
+          <svg viewBox="0 0 24 24" style="fill:rgba(255,255,255,.7);"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <div class="role-card-text">
+          <p>Sou do Suporte</p>
+          <span>Painel de atendimento</span>
+        </div>
+        <div class="role-card-arrow">›</div>
+      </div>
+    </div>
+    <div style="margin-top:24px;">
+      <button style="background:none;border:none;color:rgba(255,255,255,.25);font-size:12px;font-family:var(--font);cursor:pointer;" onclick="goScreen('screen-config')">⚙ Configurar Firebase</button>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="screen" id="screen-login">
+    <div class="login-header">
+      <button class="back-btn" onclick="goBack()">← Voltar</button>
+      <h2 id="login-title">Entrar</h2>
+      <p id="login-sub">Preencha seus dados</p>
+    </div>
+    <div class="login-body">
+      <div id="login-fields"></div>
+      <button class="btn-main" id="btn-login" onclick="fazerLogin()">Entrar</button>
+      <div class="login-err" id="login-err"></div>
+    </div>
+  </div>
+
+  <!-- CHAT MOTORISTA -->
+  <div class="screen" id="screen-driver-chat">
+    <div class="driver-topbar">
+      <div class="av" style="background:var(--accent);color:var(--c1);">S</div>
+      <div class="dinfo">
+        <p>Suporte</p>
+        <span><span class="online-dot"></span> online</span>
+      </div>
+    </div>
+    <div class="chatbg" id="driver-msgs">
+      <div class="day-sep"><span>Hoje</span></div>
+    </div>
+    <div class="typing-indicator" id="driver-typing">Suporte está digitando...</div>
+    <div class="input-bar">
+      <textarea id="driver-input" placeholder="Mensagem..." rows="1"
+        oninput="autoResize(this)"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDriver();}"></textarea>
+      <button class="send-btn" id="driver-send-btn" onclick="sendDriver()">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- PAINEL SUPORTE -->
+  <div class="screen" id="screen-support">
+    <div class="sup-sidebar" id="sup-sidebar">
+      <div class="sup-topbar">
+        <h2>Motoristas</h2>
+        <button class="btn-new" onclick="openModal()">+ Novo</button>
+      </div>
+      <div class="sup-search">
+        <input type="text" placeholder="🔍  Buscar..." id="search-input" oninput="filterList()"/>
+      </div>
+      <div class="sup-list" id="sup-list">
+        <div style="padding:24px;text-align:center;color:rgba(255,255,255,.2);font-size:13px;">Carregando...</div>
+      </div>
+    </div>
+    <div class="sup-chat" id="sup-chat">
+      <div class="sup-no-chat" id="sup-no-chat">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+        <p>Selecione uma conversa</p>
+      </div>
+      <div id="sup-active" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+        <div class="sup-chat-header">
+          <div class="av" id="sup-av" style="width:36px;height:36px;font-size:13px;">--</div>
+          <div class="dinfo">
+            <p id="sup-chat-name">—</p>
+            <span id="sup-chat-sub">—</span>
+          </div>
+          <button onclick="backToList()" style="margin-left:auto;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.6);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:var(--font);">Lista</button>
+        </div>
+        <div class="chatbg sup-messages" id="sup-msgs">
+          <div class="day-sep"><span>Hoje</span></div>
+        </div>
+        <div class="sup-input-bar">
+          <textarea id="sup-input" placeholder="Responder..." rows="1"
+            oninput="autoResize(this)"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendSupport();}"></textarea>
+          <button class="send-btn active" onclick="sendSupport()">
+            <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIG FIREBASE -->
+  <div class="screen" id="screen-config">
+    <div class="cfg-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l6 2.66V11c0 3.71-2.53 7.18-6 8.29C8.53 18.18 6 14.71 6 11V7.66L12 5z"/></svg>
+    </div>
+    <h2>Configurar Firebase</h2>
+    <div class="sub">O Firebase é o banco de dados gratuito do Google que armazena as mensagens em tempo real. Configure uma vez só.</div>
+    <div class="cfg-steps">
+      <ol>
+        <li>Acesse <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> e crie um projeto</li>
+        <li>Clique em <strong style="color:#fff;">Realtime Database</strong> → <code>Criar banco</code> → modo de teste</li>
+        <li>Vá em <strong style="color:#fff;">Configurações ⚙</strong> → <code>Seus apps</code> → ícone Web <code>&lt;/&gt;</code></li>
+        <li>Copie o objeto <code>firebaseConfig</code> completo e cole abaixo</li>
+      </ol>
+    </div>
+    <textarea id="cfg-input" placeholder='const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "meu-app.firebaseapp.com",
+  databaseURL: "https://meu-app-default-rtdb.firebaseio.com",
+  projectId: "meu-app",
+  storageBucket: "meu-app.appspot.com",
+  messagingSenderId: "12345",
+  appId: "1:12345:web:abc"
+};'></textarea>
+    <div class="cfg-err" id="cfg-err"></div>
+    <button class="btn-main" onclick="saveConfig()">Salvar e continuar</button>
+    <button style="background:none;border:none;color:rgba(255,255,255,.3);font-size:12px;font-family:var(--font);cursor:pointer;margin-top:12px;" onclick="goScreen('screen-role')">← Voltar</button>
+  </div>
+
+</div>
+
+<!-- MODAL CADASTRAR MOTORISTA -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>Cadastrar motorista</h3>
+    <div class="field"><label>Nome completo</label><input type="text" id="m-nome" placeholder="Ex: João da Silva"/></div>
+    <div class="field"><label>CPF</label><input type="text" id="m-cpf" placeholder="000.000.000-00" inputmode="numeric" maxlength="14" oninput="maskCPF(this)"/></div>
+    <div class="field"><label>Placa do veículo</label><input type="text" id="m-placa" placeholder="ABC-1234" style="text-transform:uppercase"/></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="cadastrar()">Cadastrar</button>
+    </div>
+    <div class="link-result" id="link-result">
+      <p>✅ Motorista cadastrado! Envie este link:</p>
+      <div class="link-url" id="link-url-val"></div>
+      <button class="btn-copy" onclick="copyLink()">📋 Copiar link</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ════════════════════════════════════════
+// CONSTANTES
+// ════════════════════════════════════════
+const SUP_PASS = 'suporte123';
+const COLORS = [
+  ['#dbeafe','#1e40af'],['#ede9fe','#5b21b6'],['#d1fae5','#065f46'],
+  ['#fef3c7','#92400e'],['#fce7f3','#9d174d'],['#e0f2fe','#0c4a6e']
+];
+function gc(name){ return COLORS[(name||'?').charCodeAt(0)%COLORS.length]; }
+function inits(name){ return (name||'??').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+function esc(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+function ft(ts){ if(!ts) return ''; const d=new Date(ts); return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let DB = null, me = null, role = null, curDriverId = null, allDrivers = [], supListener = null;
+
+// ════════════════════════════════════════
+// FIREBASE
+// ════════════════════════════════════════
+function initFB(cfg){
+  try {
+    if(firebase.apps.length) { try{ firebase.app().delete(); }catch(e){} }
+    firebase.initializeApp(cfg);
+    DB = firebase.database();
+    return true;
+  } catch(e){ return false; }
+}
+
+function saveConfig(){
+  const raw = document.getElementById('cfg-input').value.trim();
+  const err = document.getElementById('cfg-err');
+  err.textContent = '';
+  try {
+    const match = raw.match(/\{[\s\S]*\}/);
+    if(!match) throw new Error('Formato inválido — cole o objeto completo');
+    const cfg = Function('return ('+match[0]+')')();
+    if(!cfg.apiKey) throw new Error('apiKey não encontrado');
+    if(!cfg.databaseURL) throw new Error('databaseURL não encontrado — ative o Realtime Database no Firebase');
+    localStorage.setItem('fbcfg', JSON.stringify(cfg));
+    if(!initFB(cfg)) throw new Error('Erro ao conectar ao Firebase');
+    goScreen('screen-role');
+  } catch(e){ err.textContent = '⚠ ' + e.message; }
+}
+
+// ════════════════════════════════════════
+// NAVEGAÇÃO
+// ════════════════════════════════════════
+function goScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goBack(){ goScreen('screen-role'); }
+
+function goLogin(r){
+  role = r;
+  const title = document.getElementById('login-title');
+  const sub = document.getElementById('login-sub');
+  const fields = document.getElementById('login-fields');
+  if(r==='driver'){
+    title.textContent = 'Sou Motorista';
+    sub.textContent = 'Digite seu nome e CPF para entrar no chat.';
+    fields.innerHTML = `
+      <div class="field"><label>Nome completo</label><input type="text" id="l-nome" placeholder="João da Silva" autocomplete="name"/></div>
+      <div class="field"><label>CPF</label><input type="text" id="l-cpf" placeholder="000.000.000-00" inputmode="numeric" maxlength="14" oninput="maskCPF(this)"/></div>`;
+  } else {
+    title.textContent = 'Painel de Suporte';
+    sub.textContent = 'Digite a senha de acesso.';
+    fields.innerHTML = `<div class="field"><label>Senha</label><input type="password" id="l-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()"/></div>`;
+  }
+  goScreen('screen-login');
+}
+
+// ════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════
+async function fazerLogin(){
+  const err = document.getElementById('login-err');
+  err.textContent = '';
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.textContent = 'Entrando...';
+  try {
+    if(role === 'driver'){
+      const nome = (document.getElementById('l-nome')||{}).value?.trim();
+      const cpf = (document.getElementById('l-cpf')||{}).value?.replace(/\D/g,'');
+      if(!nome||nome.length<2){ err.textContent='Digite seu nome completo.'; return; }
+      if(!cpf||cpf.length!==11){ err.textContent='Digite um CPF válido.'; return; }
+      const snap = await DB.ref('drivers').orderByChild('cpf').equalTo(cpf).once('value');
+      const val = snap.val();
+      if(!val){ err.textContent='CPF não cadastrado. Solicite o link ao seu gestor.'; return; }
+      const did = Object.keys(val)[0];
+      me = { id:did, nome:val[did].nome||nome, cpf, token:val[did].token };
+      await DB.ref('drivers/'+did).update({online:true,lastSeen:Date.now()});
+      window.addEventListener('beforeunload',()=>DB.ref('drivers/'+me.id+'/online').set(false));
+      initDriverChat(did);
+    } else {
+      const senha = document.getElementById('l-senha')?.value;
+      if(senha !== SUP_PASS){ err.textContent='Senha incorreta.'; return; }
+      me = { role:'support' };
+      initSupport();
+    }
+  } catch(e){ err.textContent='Erro de conexão. Verifique o Firebase.'; console.error(e); }
+  finally { btn.disabled=false; btn.textContent='Entrar'; }
+}
+
+// ════════════════════════════════════════
+// CHAT MOTORISTA
+// ════════════════════════════════════════
+function initDriverChat(did){
+  goScreen('screen-driver-chat');
+  const box = document.getElementById('driver-msgs');
+  box.innerHTML='<div class="day-sep"><span>Hoje</span></div>';
+  DB.ref('messages/'+did).orderByChild('ts').on('value', snap=>{
+    box.innerHTML='<div class="day-sep"><span>Hoje</span></div>';
+    snap.forEach(ch=>{ const m=ch.val(); addMsg(box, m.sender==='driver'?'me':'them', m.content, m.ts, 'driver'); });
+    box.scrollTop=box.scrollHeight;
+  });
+}
+
+function sendDriver(){
+  if(!me) return;
+  const inp = document.getElementById('driver-input');
+  const txt = inp.value.trim();
+  if(!txt) return;
+  DB.ref('messages/'+me.id).push({sender:'driver',content:txt,ts:Date.now()});
+  DB.ref('drivers/'+me.id).update({ultimaMsg:txt,ultimaMsgTs:Date.now(),naoLidas:firebase.database.ServerValue.increment(1)});
+  inp.value=''; inp.style.height='auto';
+}
+
+// ════════════════════════════════════════
+// PAINEL SUPORTE
+// ════════════════════════════════════════
+function initSupport(){
+  goScreen('screen-support');
+  DB.ref('drivers').on('value', snap=>{
+    allDrivers=[];
+    snap.forEach(ch=>allDrivers.push({id:ch.key,...ch.val()}));
+    allDrivers.sort((a,b)=>(b.ultimaMsgTs||0)-(a.ultimaMsgTs||0));
+    renderList();
+  });
+}
+
+function filterList(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  renderList(q);
+}
+
+function renderList(q=''){
+  const list = document.getElementById('sup-list');
+  const filtered = q ? allDrivers.filter(d=>(d.nome||'').toLowerCase().includes(q)||(d.placa||'').toLowerCase().includes(q)) : allDrivers;
+  if(!filtered.length){
+    list.innerHTML='<div style="padding:24px;text-align:center;color:rgba(255,255,255,.2);font-size:13px;">Nenhum motorista encontrado</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(d=>{
+    const [bg,fg]=gc(d.nome||'?');
+    const active=d.id===curDriverId?'active':'';
+    const badge=d.naoLidas>0?`<div class="unread-badge">${d.naoLidas}</div>`:'';
+    const pill=`<div class="online-pill ${d.online?'on':''}"></div>`;
+    return `<div class="sup-conv ${active}" onclick="openConv('${d.id}')">
+      <div class="sup-av" style="background:${bg};color:${fg}">${inits(d.nome||'?')}</div>
+      <div class="sup-conv-info">
+        <div class="sup-conv-name">${esc(d.nome||'Motorista')}</div>
+        <div class="sup-conv-preview">${esc(d.ultimaMsg||d.placa||'Sem mensagens')}</div>
+      </div>
+      <div class="sup-conv-meta">${pill}<div class="sup-conv-time">${ft(d.ultimaMsgTs)}</div>${badge}</div>
+    </div>`;
+  }).join('');
+}
+
+function openConv(did){
+  curDriverId=did;
+  DB.ref('drivers/'+did+'/naoLidas').set(0);
+  // no mobile, esconde sidebar
+  if(window.innerWidth<900){
+    document.getElementById('sup-sidebar').classList.add('hidden-mobile');
+    document.getElementById('sup-chat').classList.remove('hidden-mobile');
+  }
+  DB.ref('drivers/'+did).once('value').then(snap=>{
+    const d=snap.val()||{};
+    const [bg,fg]=gc(d.nome||'?');
+    const av=document.getElementById('sup-av');
+    av.textContent=inits(d.nome||'?');
+    av.style.cssText=`width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:${bg};color:${fg};flex-shrink:0;`;
+    document.getElementById('sup-chat-name').textContent=d.nome||'Motorista';
+    document.getElementById('sup-chat-sub').textContent=(d.online?'online agora':'offline')+(d.placa?' · '+d.placa:'');
+    document.getElementById('sup-no-chat').style.display='none';
+    const ac=document.getElementById('sup-active');
+    ac.style.display='flex'; ac.style.flex='1'; ac.style.flexDirection='column'; ac.style.overflow='hidden';
+  });
+  // escuta msgs
+  if(supListener&&window._supDid) DB.ref('messages/'+window._supDid).off('value',supListener);
+  window._supDid=did;
+  const box=document.getElementById('sup-msgs');
+  box.innerHTML='<div class="day-sep"><span>Hoje</span></div>';
+  supListener=DB.ref('messages/'+did).orderByChild('ts').on('value',snap=>{
+    box.innerHTML='<div class="day-sep"><span>Hoje</span></div>';
+    snap.forEach(ch=>{ const m=ch.val(); addMsg(box, m.sender==='support'?'me':'them', m.content, m.ts, 'support'); });
+    box.scrollTop=box.scrollHeight;
+    if(curDriverId===did) DB.ref('drivers/'+did+'/naoLidas').set(0);
+  });
+  renderList();
+}
+
+function backToList(){
+  if(window.innerWidth<900){
+    document.getElementById('sup-sidebar').classList.remove('hidden-mobile');
+    document.getElementById('sup-chat').classList.add('hidden-mobile');
+  }
+}
+
+function sendSupport(){
+  if(!curDriverId) return;
+  const inp=document.getElementById('sup-input');
+  const txt=inp.value.trim();
+  if(!txt) return;
+  DB.ref('messages/'+curDriverId).push({sender:'support',content:txt,ts:Date.now()});
+  DB.ref('drivers/'+curDriverId).update({ultimaMsg:txt,ultimaMsgTs:Date.now()});
+  inp.value=''; inp.style.height='auto';
+}
+
+// ════════════════════════════════════════
+// RENDERIZAR MENSAGEM
+// ════════════════════════════════════════
+function addMsg(box, dir, text, ts, panel){
+  const wrap=document.createElement('div');
+  wrap.className=`msg-wrap ${dir} ${panel==='support'?'sup-msg-wrap':''}`;
+  wrap.innerHTML=`<div class="msg-bubble">${esc(text)}<span class="mtime">${ft(ts)}</span></div>`;
+  box.appendChild(wrap);
+  box.scrollTop=box.scrollHeight;
+}
+
+// ════════════════════════════════════════
+// MODAL CADASTRO
+// ════════════════════════════════════════
+function openModal(){
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('link-result').style.display='none';
+  ['m-nome','m-cpf','m-placa'].forEach(id=>document.getElementById(id).value='');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target===e.currentTarget)closeModal(); });
+
+async function cadastrar(){
+  const nome=document.getElementById('m-nome').value.trim();
+  const cpf=document.getElementById('m-cpf').value.replace(/\D/g,'');
+  const placa=document.getElementById('m-placa').value.trim().toUpperCase();
+  if(!nome||!cpf||!placa){ alert('Preencha todos os campos.'); return; }
+  if(cpf.length!==11){ alert('CPF inválido.'); return; }
+  const token=uid();
+  const did='drv_'+uid();
+  await DB.ref('drivers/'+did).set({nome,cpf,placa,token,online:false,naoLidas:0,criadoEm:Date.now()});
+  const link=window.location.href.split('?')[0]+'?driver='+token;
+  document.getElementById('link-url-val').textContent=link;
+  document.getElementById('link-result').style.display='block';
+  document.querySelector('#modal .btn-save').textContent='Cadastrar outro';
+  document.querySelector('#modal .btn-cancel').textContent='Fechar';
+}
+
+function copyLink(){
+  const url=document.getElementById('link-url-val').textContent;
+  navigator.clipboard.writeText(url).catch(()=>{});
+  const b=document.querySelector('.btn-copy');
+  b.textContent='✅ Copiado!';
+  setTimeout(()=>b.textContent='📋 Copiar link',2000);
+}
+
+// ════════════════════════════════════════
+// MÁSCARA CPF
+// ════════════════════════════════════════
+function maskCPF(el){
+  let v=el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>9) v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  else if(v.length>6) v=v.replace(/(\d{3})(\d{3})(\d+)/,'$1.$2.$3');
+  else if(v.length>3) v=v.replace(/(\d{3})(\d+)/,'$1.$2');
+  el.value=v;
+}
+
+// ════════════════════════════════════════
+// INIT — verifica token na URL + config
+// ════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async ()=>{
+  // tenta carregar config salva
+  const saved = localStorage.getItem('fbcfg');
+  if(saved){ try{ initFB(JSON.parse(saved)); }catch(e){} }
+
+  setTimeout(()=>{
+    document.getElementById('splash').classList.add('hide');
+    // verifica se é link de motorista
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('driver');
+    if(token && DB){
+      // pré-seleciona motorista e pede login
+      role='driver';
+      document.getElementById('login-title').textContent='Identificação';
+      document.getElementById('login-sub').textContent='Confirme seus dados para entrar:';
+      document.getElementById('login-fields').innerHTML=`
+        <div class="field"><label>Nome completo</label><input type="text" id="l-nome" placeholder="João da Silva" autocomplete="name"/></div>
+        <div class="field"><label>CPF</label><input type="text" id="l-cpf" placeholder="000.000.000-00" inputmode="numeric" maxlength="14" oninput="maskCPF(this)"/></div>`;
+      goScreen('screen-login');
+    } else if(!saved){
+      goScreen('screen-config');
+    } else {
+      goScreen('screen-role');
+    }
+  }, 1600);
+});
+</script>
+</body>
+</html>
